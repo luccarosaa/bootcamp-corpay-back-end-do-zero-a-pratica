@@ -1,0 +1,1 @@
+console.log('Criando o arquivo app.ts para teste');
