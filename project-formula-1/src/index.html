@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>F1 - Times e Pilotos</title>
+</head>
+<body>
+    <h1>🏎️ Fórmula 1</h1>
+
+    <!-- ======================================== -->
+    <!-- PARTE 1: Selecionar TIME e ver PILOTOS -->
+    <!-- ======================================== -->
+    <h2>1. Ver pilotos por time</h2>
+    
+    <select id="selectTime">
+        <option value="">--- Selecione um time ---</option>
+    </select>
+    
+    <button onclick="buscarPilotosPorTime()">Ver Pilotos</button>
+    
+    <div id="resultadoPilotos"></div>
+
+    <hr>
+
+    <!-- ======================================== -->
+    <!-- PARTE 2: Selecionar PILOTO e ver INFO -->
+    <!-- ======================================== -->
+    <h2>2. Ver informações do piloto</h2>
+    
+    <select id="selectPiloto">
+        <option value="">--- Selecione um piloto ---</option>
+    </select>
+    
+    <button onclick="buscarInfoPiloto()">Ver Informações</button>
+    
+    <div id="resultadoInfoPiloto"></div>
+
+    <script>
+        // ============================================
+        // CONFIGURAÇÃO: URL da API
+        // ============================================
+        const API_URL = 'http://localhost:3333';
+
+        // ============================================
+        // QUANDO A PÁGINA CARREGAR, BUSCAR OS DADOS
+        // ============================================
+        // Isso executa automaticamente quando a página abre
+        carregarTimes();
+        carregarPilotos();
+
+        // ============================================
+        // FUNÇÃO 1: Buscar times da API
+        // ============================================
+        async function carregarTimes() {
+            // 1. Faz a requisição para a API
+            const resposta = await fetch(`${API_URL}/teams`);
+            
+            // 2. Converte a resposta para JSON
+            const dados = await resposta.json();
+            
+            // 3. Pega o select do HTML
+            const select = document.getElementById('selectTime');
+            
+            // 4. Para cada time, cria uma opção no select
+            for (let time of dados.teams) {
+                const option = document.createElement('option');
+                option.value = time.name;
+                option.textContent = time.name;
+                select.appendChild(option);
+            }
+        }
+
+        // ============================================
+        // FUNÇÃO 2: Buscar pilotos da API
+        // ============================================
+        async function carregarPilotos() {
+            // 1. Faz a requisição para a API
+            const resposta = await fetch(`${API_URL}/drivers`);
+            
+            // 2. Converte para JSON
+            const dados = await resposta.json();
+            
+            // 3. Pega o select do HTML
+            const select = document.getElementById('selectPiloto');
+            
+            // 4. Para cada piloto, cria uma opção no select
+            for (let piloto of dados.drivers) {
+                const option = document.createElement('option');
+                option.value = piloto.id;
+                option.textContent = piloto.name;
+                select.appendChild(option);
+            }
+        }
+
+        // ============================================
+        // FUNÇÃO 3: Buscar pilotos de um time específico
+        // ============================================
+        async function buscarPilotosPorTime() {
+            // 1. Pega o time selecionado
+            const select = document.getElementById('selectTime');
+            const timeEscolhido = select.value;
+            
+            // 2. Valida se escolheu um time
+            if (timeEscolhido === '') {
+                alert('Por favor, selecione um time!');
+                return;
+            }
+
+            // 3. Busca TODOS os pilotos
+            const resposta = await fetch(`${API_URL}/drivers`);
+            const dados = await resposta.json();
+            
+            // 4. Filtra só os pilotos do time escolhido
+            const pilotosFiltrados = [];
+            for (let piloto of dados.drivers) {
+                if (piloto.team === timeEscolhido) {
+                    pilotosFiltrados.push(piloto);
+                }
+            }
+
+            // 5. Mostra o resultado na tela
+            const div = document.getElementById('resultadoPilotos');
+            
+            if (pilotosFiltrados.length === 0) {
+                div.innerHTML = `<p>Nenhum piloto encontrado para ${timeEscolhido}</p>`;
+            } else {
+                let html = `<h3>Pilotos da ${timeEscolhido}:</h3><ul>`;
+                for (let piloto of pilotosFiltrados) {
+                    html += `<li>${piloto.name}</li>`;
+                }
+                html += '</ul>';
+                div.innerHTML = html;
+            }
+        }
+
+        // ============================================
+        // FUNÇÃO 4: Buscar informações de um piloto específico
+        // ============================================
+        async function buscarInfoPiloto() {
+            // 1. Pega o piloto selecionado
+            const select = document.getElementById('selectPiloto');
+            const idPiloto = select.value;
+            
+            // 2. Valida se escolheu um piloto
+            if (idPiloto === '') {
+                alert('Por favor, selecione um piloto!');
+                return;
+            }
+
+            // 3. Busca o piloto específico na API
+            const resposta = await fetch(`${API_URL}/drivers/${idPiloto}`);
+            const dados = await resposta.json();
+            
+            // 4. Pega o piloto do resultado
+            const piloto = dados.driver;
+
+            // 5. Mostra o resultado na tela
+            const div = document.getElementById('resultadoInfoPiloto');
+            div.innerHTML = `
+                <div style="border:1px solid #ccc; padding:10px; margin-top:10px;">
+                    <h3>Informações do Piloto</h3>
+                    <p><strong>ID:</strong> ${piloto.id}</p>
+                    <p><strong>Nome:</strong> ${piloto.name}</p>
+                    <p><strong>Time:</strong> ${piloto.team}</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
